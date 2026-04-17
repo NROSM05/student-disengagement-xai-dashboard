@@ -1,0 +1,29 @@
+# --- System ---
+
+desktop.ini
+.DS_Store
+
+# --- Python ---
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- Node / React ---
+
+node_modules/
+dist/
+build/
+.eslintcache
+
+# --- Project Data ---
+
+*.csv
+shap_explainer.pkl
+student_model.pkl
+
+# --- API Keys ---
+
+.env
+.env.local
