@@ -174,8 +174,7 @@ const App = () => {
       }
 
       // 2. Use the stable v1 endpoint
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;      const prompt = `Act as a Senior Advisor at Kingston University. Brief a Professor on Student ${selectedId}: Prediction ${resultA.success_prediction}, Clicks ${studentA.total_clicks}, Score ${studentA.avg_score}%. Use third person. Focus on internal academic strategy.`;
-      
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`;      
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -205,8 +204,7 @@ const App = () => {
     try {
       if (!geminiKey) throw new Error("API Key missing.");
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;      
-      const studentIdentifier = selectedId || "Simulator Case";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`;      const studentIdentifier = selectedId || "Simulator Case";
       const prompt = `Act as a Senior Academic Advisor at Kingston University. Draft a professional, supportive, and formal email template addressed TO the student (ID: ${studentIdentifier}). 
       Context: Prediction ${resultA.success_prediction}, Activity ${studentA.total_clicks} clicks, Performance ${studentA.avg_score}%. 
       Task: Write a clear email inviting them to a support tutorial. Output ONLY the email content.`;
