@@ -9,7 +9,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",
-    "https://your-project-name.vercel.app", 
+    "https://student-disengagement-xai-dashboard.vercel.app/", 
 ]
 
 app.add_middleware(
