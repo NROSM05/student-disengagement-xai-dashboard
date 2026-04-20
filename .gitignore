@@ -20,8 +20,7 @@ build/
 # --- Project Data ---
 
 *.csv
-shap_explainer.pkl
-student_model.pkl
+
 
 # --- API Keys ---
 
