@@ -163,11 +163,8 @@ const App = () => {
     setIntervention(null);
     const geminiKey = process.env.REACT_APP_GEMINI_API_KEY; 
     try {
-      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`;
-      const listResponse = await fetch(listUrl);
-      const listData = await listResponse.json();
-      const supportedModel = listData.models?.find(m => m.supportedGenerationMethods.includes('generateContent'));
-      const url = `https://generativelanguage.googleapis.com/v1beta/${supportedModel.name}:generateContent?key=${geminiKey}`;
+      const modelName = "gemini-1.5-flash"; 
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
       const prompt = `Act as a Senior Advisor at Kingston University. Brief a Professor on Student ${selectedId}: Prediction ${resultA.success_prediction}, Clicks ${studentA.total_clicks}, Score ${studentA.avg_score}%. Use third person. Focus on internal academic strategy.`;
       const response = await fetch(url, {
         method: 'POST',
@@ -190,18 +187,8 @@ const App = () => {
 
   try {
     // Dynamic Model Discovery (Matching the working 'Evaluate' logic)
-    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`;
-    const listResponse = await fetch(listUrl);
-    const listData = await listResponse.json();
-    
-    // Find the first model that supports content generation
-    const supportedModel = listData.models?.find(m => 
-      m.supportedGenerationMethods.includes('generateContent')
-    );
-
-    if (!supportedModel) throw new Error("No compatible AI models found.");
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/${supportedModel.name}:generateContent?key=${geminiKey}`;
+    const modelName = "gemini-1.5-flash"; 
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
     
     const studentIdentifier = selectedId || "Simulator Case";
     const prompt = `Act as a Senior Academic Advisor at Kingston University. Draft a professional, supportive, and formal email template addressed TO the student (ID: ${studentIdentifier}). 
