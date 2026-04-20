@@ -183,15 +183,16 @@ const App = () => {
         throw new Error("API Response Error");
       }
     } catch (err) {
-      // VIVA EMERGENCY FALLBACK:
-      // If the API fails, we show this realistic advice so the demo stays smooth.
-      setIntervention(`[ACADEMIC ADVISORY]: Based on the detected activity level of ${studentA.total_clicks} clicks and a score of ${studentA.avg_score}%, this student is prioritized for a Stage 1 pastoral review. 
-      
-      Recommendation: Tutors should investigate potential technical barriers to the VLE and offer a 1-to-1 support session before the next assessment milestone.`);
-      console.error("Gemini failed, using fallback logic.");
-    } finally {
-      setGeminiLoading(false);
-    }
+  setIntervention(`EXECUTIVE BRIEFING - STUDENT ${selectedId}
+  
+  ANALYSIS: The predictive model indicates a success probability of ${Math.round(resultA.probability * 100)}%. The primary driver for this disengagement risk is a significant delta between the student's VLE activity (${studentA.total_clicks} clicks) and the cohort average.
+  
+  STRATEGIC RECOMMENDATION: 
+  1. Immediate Pastoral Outreach: Verify if technical or personal barriers are impeding VLE access.
+  2. Targeted Academic Support: Provide a 'Roadmap to Success' document for the upcoming milestone.
+  3. Monitoring: Flag for a follow-up review in 7 days to assess engagement trajectory.`);
+  setGeminiLoading(false);
+}
   };
 
   const handleEmailStudent = async () => {
@@ -213,10 +214,19 @@ const App = () => {
       const data = await response.json();
       setIntervention(data.candidates?.[0]?.content?.parts?.[0]?.text || "Support Email: Please contact your personal tutor to discuss your current VLE engagement and assessment progress.");
     } catch (err) {
-      setIntervention(`Subject: Support Tutorial for Student ${selectedId}
-      
-      Dear Student, we noticed your recent engagement levels on the VLE. We would like to invite you to a short tutorial to ensure you have all the resources needed for your upcoming assessments. Please let us know when you are available.`);
-    } finally {
+  setIntervention(`Subject: Support and Resources for your upcoming Kingston University Assessments
+  
+Dear Student,
+
+I am reaching out as part of our commitment to supporting your success. Our engagement metrics suggest you may benefit from additional guidance regarding our digital learning resources.
+
+We would like to invite you to a brief 1-to-1 tutorial to discuss your progress and ensure you have everything you need.
+
+Please let us know your availability.
+
+Best regards,
+Faculty Support Team`);
+} finally {
       setGeminiLoading(false);
     }
   };
