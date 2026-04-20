@@ -7,9 +7,13 @@ import numpy as np
 
 app = FastAPI()
 
+@app.get("/")
+def home():
+    return {"status": "Intelligence Server is Online", "university": "Kingston"}
+
 origins = [
     "http://localhost:3000",
-    "https://student-disengagement-xai-dashboard.vercel.app/", 
+    "https://student-disengagement-xai-dashboard.vercel.app", 
 ]
 
 app.add_middleware(
