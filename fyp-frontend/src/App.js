@@ -161,56 +161,75 @@ const App = () => {
     if (!resultA) return;
     setGeminiLoading(true);
     setIntervention(null);
+    
+    // 1. Grab the key
     const geminiKey = process.env.REACT_APP_GEMINI_API_KEY; 
+    
     try {
-      const modelName = "gemini-1.5-flash"; 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+      // Diagnostic check: If this shows 'undefined' in your console, the Vercel key isn't working
+      console.log("System Check - Key Present:", !!geminiKey);
+
+      if (!geminiKey) {
+        throw new Error("API Key is missing from environment variables.");
+      }
+
+      // 2. Use the stable v1 endpoint
+      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      
       const prompt = `Act as a Senior Advisor at Kingston University. Brief a Professor on Student ${selectedId}: Prediction ${resultA.success_prediction}, Clicks ${studentA.total_clicks}, Score ${studentA.avg_score}%. Use third person. Focus on internal academic strategy.`;
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
+
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || `Google API Error: ${response.status}`);
+      }
+
       setIntervention(data.candidates?.[0]?.content?.parts?.[0]?.text);
     } catch (err) {
-      setIntervention(`AI Issue: ${err.message}`);
+      setIntervention(`Connection Issue: ${err.message}`);
+      console.error("Gemini Error:", err);
     } finally {
       setGeminiLoading(false);
     }
   };
 
   const handleEmailStudent = async () => {
-  if (!resultA) return; // Guard clause
-  setGeminiLoading(true);
-  const geminiKey = process.env.REACT_APP_GEMINI_API_KEY; 
+    if (!resultA) return;
+    setGeminiLoading(true);
+    const geminiKey = process.env.REACT_APP_GEMINI_API_KEY; 
 
-  try {
-    // Dynamic Model Discovery (Matching the working 'Evaluate' logic)
-    const modelName = "gemini-1.5-flash"; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
-    
-    const studentIdentifier = selectedId || "Simulator Case";
-    const prompt = `Act as a Senior Academic Advisor at Kingston University. Draft a professional, supportive, and formal email template addressed TO the student (ID: ${studentIdentifier}). 
-    Context: Prediction ${resultA.success_prediction}, Activity ${studentA.total_clicks} clicks, Performance ${studentA.avg_score}%. 
-    Task: Write a clear email inviting them to a support tutorial. Output ONLY the email content.`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
+    try {
+      if (!geminiKey) throw new Error("API Key missing.");
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || "Generation Failed");
-    
-    setIntervention(data.candidates?.[0]?.content?.parts?.[0]?.text);
-  } catch (err) {
-    setIntervention(`AI Email Draft Issue: ${err.message}`);
-  } finally {
-    setGeminiLoading(false);
-  }
-};
+      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      
+      const studentIdentifier = selectedId || "Simulator Case";
+      const prompt = `Act as a Senior Academic Advisor at Kingston University. Draft a professional, supportive, and formal email template addressed TO the student (ID: ${studentIdentifier}). 
+      Context: Prediction ${resultA.success_prediction}, Activity ${studentA.total_clicks} clicks, Performance ${studentA.avg_score}%. 
+      Task: Write a clear email inviting them to a support tutorial. Output ONLY the email content.`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || "Generation Failed");
+      
+      setIntervention(data.candidates?.[0]?.content?.parts?.[0]?.text);
+    } catch (err) {
+      setIntervention(`AI Email Draft Issue: ${err.message}`);
+    } finally {
+      setGeminiLoading(false);
+    }
+  };
 
   const downloadReport = (data) => {
     const reportData = data?.studentMetrics ? data : { studentMetrics: studentA, strategy: intervention, prediction: resultA?.success_prediction };
