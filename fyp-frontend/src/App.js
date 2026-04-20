@@ -161,39 +161,37 @@ const App = () => {
     if (!resultA) return;
     setGeminiLoading(true);
     setIntervention(null);
-    
-    // 1. Grab the key
     const geminiKey = process.env.REACT_APP_GEMINI_API_KEY; 
+
+    // These are the 3 ways Google identifies this model. We will try all of them.
+    const modelAttempts = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"];
     
-    try {
-      // Diagnostic check: If this shows 'undefined' in your console, the Vercel key isn't working
-      console.log("System Check - Key Present:", !!geminiKey);
+    for (const modelName of modelAttempts) {
+      try {
+        // NOTICE: We are using a DOT (1.5), not a SLASH (1/5)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: `Act as a Senior Advisor at Kingston University. Brief a Professor on Student ${selectedId}: Prediction ${resultA.success_prediction}, Clicks ${studentA.total_clicks}, Score ${studentA.avg_score}%.` }] }] })
+        });
 
-      if (!geminiKey) {
-        throw new Error("API Key is missing from environment variables.");
+        const data = await response.json();
+
+        if (response.ok) {
+          setIntervention(data.candidates?.[0]?.content?.parts?.[0]?.text);
+          console.log(`Success with model: ${modelName}`);
+          setGeminiLoading(false);
+          return; // Stop the loop, we found the winner!
+        }
+      } catch (err) {
+        console.warn(`Attempt with ${modelName} failed...`);
       }
-
-      // 2. Use the stable v1 endpoint
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`;      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || `Google API Error: ${response.status}`);
-      }
-
-      setIntervention(data.candidates?.[0]?.content?.parts?.[0]?.text);
-    } catch (err) {
-      setIntervention(`Connection Issue: ${err.message}`);
-      console.error("Gemini Error:", err);
-    } finally {
-      setGeminiLoading(false);
     }
+
+    setIntervention("AI Advice is currently unavailable. Please verify your API Key permissions in Google AI Studio.");
+    setGeminiLoading(false);
   };
 
   const handleEmailStudent = async () => {
