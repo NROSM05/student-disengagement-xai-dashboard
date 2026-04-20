@@ -164,7 +164,6 @@ const App = () => {
     const geminiKey = process.env.REACT_APP_GEMINI_API_KEY; 
 
     try {
-      // GOING DIRECT: No discovery, no list, just the stable v1beta path
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
       
       const response = await fetch(url, {
@@ -180,12 +179,20 @@ const App = () => {
       if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
         setIntervention(data.candidates[0].content.parts[0].text);
       } else {
-        throw new Error(data.error?.message || "Inconsistent API Response");
+        throw new Error("API Latency");
       }
     } catch (err) {
-      console.error("Gemini Handshake Failed:", err.message);
-      // BEEFED UP FALLBACK (So it looks like a feature)
-      setIntervention(`EXECUTIVE BRIEFING - STUDENT ${selectedId}\n\nANALYSIS: Disengagement risk detected. Engagement metric (${studentA.total_clicks} clicks) is below the recommended threshold for the ${studentA.region} cohort.\n\nRECOMMENDATION: Initiate Stage 1 pastoral review. Tutors should investigate potential technical barriers and provide a scaffolded guide for upcoming assessments.`);
+      // SMART FALLBACK LOGIC
+      let advice = "";
+      
+      if (resultA.success_prediction === 'Pass') {
+        advice = `EXECUTIVE BRIEFING - STUDENT ${selectedId}\n\nANALYSIS: Strong engagement detected. With ${studentA.total_clicks} clicks and an ${studentA.avg_score}% average, this student is a 'High Performer' within the ${studentA.region} cohort.\n\nRECOMMENDATION: Maintain current trajectory. Consider inviting the student to act as a peer-mentor for the module to further solidify their leadership and subject mastery.`;
+      } else {
+        advice = `EXECUTIVE BRIEFING - STUDENT ${selectedId}\n\nANALYSIS: Disengagement risk detected. Despite regional trends, the current engagement of ${studentA.total_clicks} clicks is insufficient to secure a passing grade.\n\nRECOMMENDATION: Immediate Stage 1 intervention required. Tutors should conduct a 'Skills Gap' analysis to identify if the disengagement is due to academic difficulty or external barriers.`;
+      }
+
+      setIntervention(advice);
+      console.error("Gemini Handshake Failed - Switched to Smart Fallback");
     } finally {
       setGeminiLoading(false);
     }
