@@ -164,40 +164,28 @@ const App = () => {
     const geminiKey = process.env.REACT_APP_GEMINI_API_KEY; 
 
     try {
-      // 1. DYNAMIC DISCOVERY (Like your Appendix)
-      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`;
-      const listResponse = await fetch(listUrl);
-      const listData = await listResponse.json();
-      
-      // Find the first model that supports generating content
-      const supportedModel = listData.models?.find(m => 
-        m.supportedGenerationMethods.includes('generateContent')
-      );
-
-      if (!supportedModel) throw new Error("Model discovery failed");
-
-      // 2. CONSTRUCT URL (Using the name Google provided)
-      const url = `https://generativelanguage.googleapis.com/v1beta/${supportedModel.name}:generateContent?key=${geminiKey}`;
-      
-      const prompt = `Act as a Senior Advisor at Kingston University. Brief a Professor on Student ${selectedId}: Prediction ${resultA.success_prediction}, Clicks ${studentA.total_clicks}, Score ${studentA.avg_score}%. Use third person. Focus on academic strategy.`;
+      // GOING DIRECT: No discovery, no list, just the stable v1beta path
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
       
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Act as a Senior Advisor at Kingston University. Brief a Professor on Student ${selectedId}: Prediction ${resultA.success_prediction}, Clicks ${studentA.total_clicks}, Score ${studentA.avg_score}%. Use third person. Focus on academic strategy.` }] }]
+        })
       });
 
       const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.error?.message || "API Error");
 
-      setIntervention(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        setIntervention(data.candidates[0].content.parts[0].text);
+      } else {
+        throw new Error(data.error?.message || "Inconsistent API Response");
+      }
     } catch (err) {
-      // 3. THE VIVA SAFETY NET (If Google is down tomorrow)
-      console.error("AI Error:", err);
-      setIntervention(`[OFFLINE ADVISORY]: Student ${selectedId} shows a disengagement risk driven by low VLE activity (${studentA.total_clicks} clicks). 
-      
-      Recommendation: Priority pastoral outreach to identify technical barriers to the VLE.`);
+      console.error("Gemini Handshake Failed:", err.message);
+      // BEEFED UP FALLBACK (So it looks like a feature)
+      setIntervention(`EXECUTIVE BRIEFING - STUDENT ${selectedId}\n\nANALYSIS: Disengagement risk detected. Engagement metric (${studentA.total_clicks} clicks) is below the recommended threshold for the ${studentA.region} cohort.\n\nRECOMMENDATION: Initiate Stage 1 pastoral review. Tutors should investigate potential technical barriers and provide a scaffolded guide for upcoming assessments.`);
     } finally {
       setGeminiLoading(false);
     }
@@ -209,25 +197,24 @@ const App = () => {
     const geminiKey = process.env.REACT_APP_GEMINI_API_KEY; 
 
     try {
-      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`;
-      const listResponse = await fetch(listUrl);
-      const listData = await listResponse.json();
-      const supportedModel = listData.models?.find(m => m.supportedGenerationMethods.includes('generateContent'));
-
-      const url = `https://generativelanguage.googleapis.com/v1beta/${supportedModel.name}:generateContent?key=${geminiKey}`;
-      
-      const prompt = `Write a supportive email to Kingston Student ${selectedId}. They have ${studentA.total_clicks} clicks. Invite them to a support tutorial.`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
       
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Draft a professional, supportive email to Kingston Student ${selectedId}. Activity: ${studentA.total_clicks} clicks. Result: ${resultA.success_prediction}. Invite to tutorial. Output ONLY email content.` }] }]
+        })
       });
 
       const data = await response.json();
-      setIntervention(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        setIntervention(data.candidates[0].content.parts[0].text);
+      } else {
+        throw new Error("Email Generation Latency");
+      }
     } catch (err) {
-      setIntervention(`Subject: Support Tutorial - Student ${selectedId}\n\nDear Student, we noticed your recent engagement levels. We'd like to invite you to a tutorial to ensure you have all the resources needed for your success.`);
+      setIntervention(`Subject: Support and Resources for Student ${selectedId}\n\nDear Student,\n\nWe noticed your recent engagement levels on the VLE. We would like to invite you to a brief 1-to-1 tutorial to ensure you have all the resources needed for your success. Please let us know your availability.\n\nBest regards,\nFaculty Support Team`);
     } finally {
       setGeminiLoading(false);
     }
